@@ -1,120 +1,172 @@
-<!DOCTYPE html>
 <html>
 <head>
-<title>Изменение погоды</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-#container {
-display: flex;
+td {
+text-align: left;
 }
-#chartContainer {
-flex: 1;
+table, th, td {
+border: 1px solid;
+}
+.Parent {
+display: flex;
+flex-direction: row; 
+}
+.child1 {
+width: 70%;
+height: 100vh;
+color: white;
+}
+.child2 {
+width: 30%;
+height: 100vh;
+}
+</style>
+<script type="text/javascript" src=
+"https://code.jquery.com/jquery-1.12.0.min.js">
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src=
+"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js">
+</script>
+<title>US Population Chart</title>
+<style>
+canvas{
+//width:500px !important;
+//height:300px !important;
+width: 80% !important;
+height: 80% !important;
 }
 </style>
 </head>
 <body>
-<div id="container">
-<table id="data">
-<thead>
-<tr>
-<th>Месяц</th>
-<th>Наивысшее значение</th>
-<th>Наименьшее значение</th>
-<th>Сухие дни</th>
-<th>Снежные дни</th>
-<th>Осадки</th>
-</tr>
-</thead>
-<tbody>
-<!— Data rows will be dynamically added here —>
-</tbody>
-</table>
-<div id="chartContainer">
-<canvas id="myChart"></canvas>
+<div class="Parent">
+<div class="child1">
+ <center>
+	<canvas id="temperatureChart" width="800" height="400"></canvas>
+	<script src="script.js"></script>
+ </center>
+ </div>
+ <div class="child2">
+ <center>
+ <h3>Temperature</h3>
+<!—-Таблица для отрисовки данных-->
+ <table id="my_data" cellpadding="7"></table>
+ </center>
+ </div>
 </div>
-</div>
-
 <script>
-window.onload = function() {
-fetch('https://raw.githubusercontent.com/RFUNN/JSON_Data/main/climate.json')
-.then(response => response.json())
-.then(data => {
-var selectedData = data.find(item => item.id === 9); // Выбираем данные по ID (в данном случае ID = 1)
-var monthLabels = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-var highTemps = [];
-var lowTemps = [];
-var dryDays = [];
-var snowDays = [];
-var rainfall = [];
+document.addEventListener('DOMContentLoaded', function () {
+    // Fetch data from the URL
+    fetch('https://raw.githubusercontent.com/RFUNN/JSON_Data/main/climate.json')
+        .then(response => response.json())
+        .then(data => {
+            // Find the entry with id 5
+            const cityData = data.find(entry => entry.id === 5);
 
-// Extract data for the selected ID from fetched JSON
-for (var i = 0; i < selectedData.monthlyAvg.length; i++) {
-highTemps.push(selectedData.monthlyAvg[i].high);
-lowTemps.push(selectedData.monthlyAvg[i].low);
-dryDays.push(selectedData.monthlyAvg[i].dryDays);
-snowDays.push(selectedData.monthlyAvg[i].snowDays);
-rainfall.push(selectedData.monthlyAvg[i].rainfall);
-}
+            // Extract high and low temperatures
+            const highTemps = cityData.monthlyAvg.map(month => month.high);
+            const lowTemps = cityData.monthlyAvg.map(month => month.low);
 
-// Draw chart
-var ctx = document.getElementById('myChart').getContext('2d');
-var myChart = new Chart(ctx, {
-type: 'line',
-data: {
-labels: monthLabels,
-datasets: [
-{
-label: 'High Temperature',
-data: highTemps,
-borderColor: 'red',
-fill: false
-},
-{
-label: 'Low Temperature',
-data: lowTemps,
-borderColor: 'blue',
-fill: false
-}
-]
-},
-options: {
-title: {
-display: true,
-text: 'Average Monthly Temperatures'
-},
-scales: {
-xAxes: [{
-scaleLabel: {
-display: true,
-labelString: 'Month'
-}
-}],
-yAxes: [{
-scaleLabel: {
-display: true,
-labelString: 'Temperature (°C)'
-}
-}]
-}
-}
+            // Month names array
+            const monthNames = [
+                'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+            ];
+
+            // Create a chart
+            const ctx = document.getElementById('temperatureChart').getContext('2d');
+            const temperatureChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthNames, // Use month names instead of numbers
+                    datasets: [
+                        {
+                            label: 'High Temperature',
+                            data: highTemps,
+                            borderColor: 'red',
+                            backgroundColor: 'transparent',
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            fill: false
+                        },
+                        {
+                            label: 'Low Temperature',
+                            data: lowTemps,
+                            borderColor: 'blue',
+                            backgroundColor: 'transparent',
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: `High and Low Temperatures in ${cityData.city}, ${cityData.country}`
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Temperature (°C)'
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
 });
 
-// Populate table
-var tableData = '';
-for (var i = 0; i < selectedData.monthlyAvg.length; i++) {
-tableData += '<tr>';
-tableData += '<td>' + monthLabels[i] + '</td>';
-tableData += '<td>' + selectedData.monthlyAvg[i].high + '</td>';
-tableData += '<td>' + selectedData.monthlyAvg[i].low + '</td>';
-tableData += '<td>' + selectedData.monthlyAvg[i].dryDays + '</td>';
-tableData += '<td>' + selectedData.monthlyAvg[i].snowDays + '</td>';
-tableData += '<td>' + selectedData.monthlyAvg[i].rainfall + '</td>';
-tableData += '</tr>';
-}
-document.getElementById('data').getElementsByTagName('tbody')[0].innerHTML = tableData;
-})
-.catch(error => console.error('Error fetching data:', error));
-}
 </script>
+<script>
+    tableData();
+    async function tableData() {
+		const months = [
+			"January", "February", "March", "April", "May", "June",
+			"July", "August", "September", "October", "November", "December"
+		];
+        const response = await fetch('https://raw.githubusercontent.com/RFUNN/JSON_Data/main/climate.json');
+        const data = await response.json();
+
+        // Find the city with id 5
+        const cityId5 = data.find(city => city.id === 9);
+
+        if (cityId5) {
+            // Display the data for the city with id 5 in the console
+            console.log(cityId5);
+
+            // Display the data in the HTML table
+            let li = `<tr><th>Months</th><th>High</th><th>Low</th></tr>`;
+            length = cityId5.monthlyAvg.length;
+            console.log(length);
+
+            for (i = 0; i < length; i++) {
+                li += `<tr>
+				    <td>${months[i]}</td>
+                    <td>${cityId5.monthlyAvg[i].high} </td>
+                    <td>${cityId5.monthlyAvg[i].low}</td>
+                </tr>`;
+            }
+
+            document.getElementById("my_data").innerHTML = li;
+        } else {
+            console.log("City with id 5 not found.");
+        }
+    }
+</script>
+
+Подробнее про Chart.js
+https://frontips.ru/sozdayom-grafiki-na-osnove-plagina-chart-js/
 </body>
 </html>
+
