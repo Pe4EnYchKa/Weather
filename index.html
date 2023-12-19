@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Изменение погоды</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+#container {
+display: flex;
+}
+#chartContainer {
+flex: 1;
+}
+</style>
+</head>
+<body>
+<div id="container">
+<table id="data">
+<thead>
+<tr>
+<th>Месяц</th>
+<th>Наивысшее значение</th>
+<th>Наименьшее значение</th>
+<th>Сухие дни</th>
+<th>Снежные дни</th>
+<th>Осадки</th>
+</tr>
+</thead>
+<tbody>
+<!— Data rows will be dynamically added here —>
+</tbody>
+</table>
+<div id="chartContainer">
+<canvas id="myChart"></canvas>
+</div>
+</div>
+
+<script>
+window.onload = function() {
+fetch('https://raw.githubusercontent.com/RFUNN/JSON_Data/main/climate.json')
+.then(response => response.json())
+.then(data => {
+var selectedData = data.find(item => item.id === 9); // Выбираем данные по ID (в данном случае ID = 1)
+var monthLabels = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+var highTemps = [];
+var lowTemps = [];
+var dryDays = [];
+var snowDays = [];
+var rainfall = [];
+
+// Extract data for the selected ID from fetched JSON
+for (var i = 0; i < selectedData.monthlyAvg.length; i++) {
+highTemps.push(selectedData.monthlyAvg[i].high);
+lowTemps.push(selectedData.monthlyAvg[i].low);
+dryDays.push(selectedData.monthlyAvg[i].dryDays);
+snowDays.push(selectedData.monthlyAvg[i].snowDays);
+rainfall.push(selectedData.monthlyAvg[i].rainfall);
+}
+
+// Draw chart
+var ctx = document.getElementById('myChart').getContext('2d');
+var myChart = new Chart(ctx, {
+type: 'line',
+data: {
+labels: monthLabels,
+datasets: [
+{
+label: 'High Temperature',
+data: highTemps,
+borderColor: 'red',
+fill: false
+},
+{
+label: 'Low Temperature',
+data: lowTemps,
+borderColor: 'blue',
+fill: false
+}
+]
+},
+options: {
+title: {
+display: true,
+text: 'Average Monthly Temperatures'
+},
+scales: {
+xAxes: [{
+scaleLabel: {
+display: true,
+labelString: 'Month'
+}
+}],
+yAxes: [{
+scaleLabel: {
+display: true,
+labelString: 'Temperature (°C)'
+}
+}]
+}
+}
+});
+
+// Populate table
+var tableData = '';
+for (var i = 0; i < selectedData.monthlyAvg.length; i++) {
+tableData += '<tr>';
+tableData += '<td>' + monthLabels[i] + '</td>';
+tableData += '<td>' + selectedData.monthlyAvg[i].high + '</td>';
+tableData += '<td>' + selectedData.monthlyAvg[i].low + '</td>';
+tableData += '<td>' + selectedData.monthlyAvg[i].dryDays + '</td>';
+tableData += '<td>' + selectedData.monthlyAvg[i].snowDays + '</td>';
+tableData += '<td>' + selectedData.monthlyAvg[i].rainfall + '</td>';
+tableData += '</tr>';
+}
+document.getElementById('data').getElementsByTagName('tbody')[0].innerHTML = tableData;
+})
+.catch(error => console.error('Error fetching data:', error));
+}
+</script>
+</body>
+</html>
